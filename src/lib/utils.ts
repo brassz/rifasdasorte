@@ -1,0 +1,29 @@
+import { type ClassValue, clsx } from "clsx"
+import { twMerge } from "tailwind-merge"
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs))
+}
+
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value)
+}
+
+export function formatDate(date: Date): string {
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(date)
+}
+
+export function generateRaffleNumbers(totalNumbers: number): number[] {
+  return Array.from({ length: totalNumbers }, (_, i) => i + 1)
+}
+
+export function calculatePackageDiscount(originalPrice: number, packagePrice: number): number {
+  return ((originalPrice - packagePrice) / originalPrice) * 100
+}
