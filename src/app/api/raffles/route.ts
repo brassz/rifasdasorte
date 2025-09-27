@@ -5,7 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const raffles = await prisma.raffle.findMany({
       where: {
-        status: "ACTIVE"
+        status: {
+          in: ["ACTIVE", "FINISHED"]
+        }
       },
       include: {
         numbers: {
@@ -37,7 +39,8 @@ export async function GET(request: NextRequest) {
       status: raffle.status,
       soldNumbers: raffle._count.numbers,
       endDate: raffle.endDate,
-      image: raffle.image
+      image: raffle.image,
+      winnerNumber: raffle.winnerNumber
     }))
 
     return NextResponse.json(formattedRaffles)

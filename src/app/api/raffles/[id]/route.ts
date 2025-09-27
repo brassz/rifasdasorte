@@ -42,7 +42,8 @@ export async function GET(
       soldNumbers: raffle._count.numbers,
       endDate: raffle.endDate,
       image: raffle.image,
-      packages: raffle.packages
+      packages: raffle.packages,
+      winnerNumber: raffle.winnerNumber
     }
 
     const formattedNumbers = raffle.numbers.map(number => ({

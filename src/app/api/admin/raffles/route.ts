@@ -118,7 +118,8 @@ export async function GET(request: NextRequest) {
       totalRevenue: raffle._count.purchases * raffle.pricePerNumber,
       createdAt: raffle.createdAt,
       endDate: raffle.endDate,
-      image: raffle.image
+      image: raffle.image,
+      winnerNumber: raffle.winnerNumber
     }))
 
     return NextResponse.json(formattedRaffles)

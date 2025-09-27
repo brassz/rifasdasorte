@@ -178,7 +178,7 @@ export default function PaymentPage() {
           <div className="flex items-center py-6">
             <Button 
               variant="outline" 
-              onClick={() => router.push(`/purchase/${params.id}`)}
+              onClick={() => router.push("/dashboard")}
               className="mr-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />

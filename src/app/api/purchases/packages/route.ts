@@ -16,6 +16,15 @@ export async function POST(request: NextRequest) {
 
     const { raffleId, packageId } = await request.json()
 
+    console.log("Package purchase request:", { raffleId, packageId, userId: session.user.id })
+
+    if (!raffleId || !packageId) {
+      return NextResponse.json(
+        { error: "raffleId e packageId são obrigatórios" },
+        { status: 400 }
+      )
+    }
+
     // Get package details
     const pkg = await prisma.package.findUnique({
       where: { id: packageId },
@@ -25,6 +34,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!pkg) {
+      console.log("Package not found:", packageId)
       return NextResponse.json(
         { error: "Pacote não encontrado" },
         { status: 404 }
@@ -32,6 +42,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (pkg.raffleId !== raffleId) {
+      console.log("Package raffle mismatch:", { packageRaffleId: pkg.raffleId, requestedRaffleId: raffleId })
       return NextResponse.json(
         { error: "Pacote não pertence a esta rifa" },
         { status: 400 }

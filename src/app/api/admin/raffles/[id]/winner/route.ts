@@ -120,13 +120,13 @@ export async function POST(
 
     const { winnerNumber, winnerId } = await request.json()
 
-    // Update raffle with winner
+    // Update raffle with winner (don't change status automatically)
     const raffle = await prisma.raffle.update({
       where: { id: params.id },
       data: {
         winnerNumber,
-        winnerId,
-        status: "FINISHED"
+        winnerId
+        // status remains unchanged - admin can finalize manually later
       }
     })
 

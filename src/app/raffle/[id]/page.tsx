@@ -30,6 +30,7 @@ interface Raffle {
   endDate?: string
   image?: string
   packages: Package[]
+  winnerNumber?: number
 }
 
 interface Package {
@@ -231,6 +232,34 @@ export default function RafflePage() {
                   </span>
                 </div>
 
+                {/* Winner Information */}
+                {raffle.status === 'FINISHED' && raffle.winnerNumber && (
+                  <div className="border-t pt-4">
+                    <div className="text-center">
+                      <Trophy className="h-12 w-12 text-yellow-500 mx-auto mb-2" />
+                      <h4 className="font-bold text-lg text-gray-900 mb-1">Vencedor!</h4>
+                      <p className="text-2xl font-bold text-yellow-600 mb-2">
+                        Número {raffle.winnerNumber.toString().padStart(3, '0')}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Parabéns ao vencedor desta rifa!
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {raffle.status === 'FINISHED' && !raffle.winnerNumber && (
+                  <div className="border-t pt-4">
+                    <div className="text-center">
+                      <Clock className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                      <h4 className="font-bold text-lg text-gray-900 mb-1">Rifa Finalizada</h4>
+                      <p className="text-sm text-gray-600">
+                        Aguardando definição do vencedor...
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Selected Numbers Summary */}
                 {selectedNumbers.length > 0 && (
                   <div className="border-t pt-4">
@@ -253,11 +282,11 @@ export default function RafflePage() {
                     </div>
                     <Button 
                       className="w-full mt-3" 
-                      onClick={() => router.push(`/purchase/${purchase.id}/payment`)}
-                      disabled={raffle.status !== 'ACTIVE'}
+                      onClick={handlePurchase}
+                      disabled={raffle.status !== 'ACTIVE' || isPurchasing}
                     >
                       <ShoppingCart className="h-4 w-4 mr-2" />
-                      Finalizar Compra
+                      {isPurchasing ? "Processando..." : "Finalizar Compra"}
                     </Button>
                   </div>
                 )}

@@ -117,7 +117,8 @@ export default function WinnerPage() {
       })
 
       if (response.ok) {
-        router.push(`/admin/raffles/${params.id}`)
+        alert("Vencedor definido com sucesso! A rifa ainda está ativa.")
+        router.push(`/admin`)
       }
     } catch (error) {
       console.error("Error confirming winner:", error)
@@ -229,9 +230,25 @@ export default function WinnerPage() {
                 <div className="text-4xl font-bold text-green-600 mb-2">
                   Número {raffle.winnerNumber.toString().padStart(3, '0')}
                 </div>
-                <p className="text-green-700">
-                  O vencedor desta rifa já foi selecionado e a rifa foi finalizada.
+                <p className="text-green-700 mb-4">
+                  O vencedor desta rifa já foi selecionado. A rifa ainda está ativa.
                 </p>
+                <div className="flex gap-2 justify-center">
+                  <Button 
+                    onClick={() => {
+                      setRaffle({...raffle, winnerNumber: undefined, winnerId: undefined})
+                    }}
+                    variant="outline"
+                  >
+                    Redefinir Vencedor
+                  </Button>
+                  <Button 
+                    onClick={() => router.push(`/admin`)}
+                    variant="default"
+                  >
+                    Voltar ao Admin
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

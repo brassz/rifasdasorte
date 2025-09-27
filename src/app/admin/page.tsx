@@ -13,7 +13,9 @@ import {
   DollarSign, 
   LogOut,
   Settings,
-  BarChart3
+  BarChart3,
+  CheckCircle,
+  Trash2
 } from "lucide-react"
 import { signOut } from "next-auth/react"
 
@@ -29,6 +31,7 @@ interface Raffle {
   createdAt: string
   endDate?: string
   image?: string
+  winnerNumber?: number
 }
 
 interface Stats {
@@ -42,6 +45,7 @@ export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [raffles, setRaffles] = useState<Raffle[]>([])
+  const [activeTab, setActiveTab] = useState<"active" | "finished">("active")
   const [stats, setStats] = useState<Stats>({
     totalRaffles: 0,
     activeRaffles: 0,
@@ -93,6 +97,14 @@ export default function AdminPage() {
     signOut({ callbackUrl: "/" })
   }
 
+  const getActiveRaffles = () => {
+    return raffles.filter(raffle => raffle.status === "ACTIVE")
+  }
+
+  const getFinishedRaffles = () => {
+    return raffles.filter(raffle => raffle.status === "FINISHED")
+  }
+
   const handleExtendRaffle = async (raffleId: string) => {
     const newEndDate = prompt("Digite a nova data de encerramento (YYYY-MM-DD):")
     if (newEndDate) {
@@ -130,6 +142,28 @@ export default function AdminPage() {
     }
   }
 
+  const handleDeleteRaffle = async (raffleId: string, raffleTitle: string) => {
+    const confirmed = confirm(`Tem certeza que deseja APAGAR a rifa "${raffleTitle}"? Esta ação não pode ser desfeita e irá deletar todos os dados relacionados (números, compras, pagamentos).`)
+    if (confirmed) {
+      try {
+        const response = await fetch(`/api/admin/raffles/${raffleId}`, {
+          method: "DELETE",
+        })
+        
+        if (response.ok) {
+          fetchData() // Refresh data
+          alert("Rifa apagada com sucesso!")
+        } else {
+          const error = await response.json()
+          alert(`Erro ao apagar rifa: ${error.error}`)
+        }
+      } catch (error) {
+        console.error("Error deleting raffle:", error)
+        alert("Erro ao apagar rifa. Tente novamente.")
+      }
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "ACTIVE":
@@ -143,10 +177,10 @@ export default function AdminPage() {
     }
   }
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, hasWinner?: boolean) => {
     switch (status) {
       case "ACTIVE":
-        return "Ativa"
+        return hasWinner ? "Ativa (Vencedor definido)" : "Ativa"
       case "FINISHED":
         return "Finalizada"
       case "CANCELLED":
@@ -269,6 +303,32 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Tabs */}
+        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "active"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Trophy className="h-4 w-4 inline mr-2" />
+            Rifas Ativas ({getActiveRaffles().length})
+          </button>
+          <button
+            onClick={() => setActiveTab("finished")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "finished"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <CheckCircle className="h-4 w-4 inline mr-2" />
+            Rifas Finalizadas ({getFinishedRaffles().length})
+          </button>
+        </div>
+
         {/* Raffles List */}
         {raffles.length === 0 ? (
           <Card>
@@ -288,7 +348,7 @@ export default function AdminPage() {
           </Card>
         ) : (
           <div className="grid gap-6">
-            {raffles.map((raffle) => (
+            {(activeTab === "active" ? getActiveRaffles() : getFinishedRaffles()).map((raffle) => (
               <Card key={raffle.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -314,7 +374,7 @@ export default function AdminPage() {
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(raffle.status)}`}>
-                      {getStatusText(raffle.status)}
+                      {getStatusText(raffle.status, !!raffle.winnerNumber)}
                     </span>
                   </div>
                 </CardHeader>
@@ -379,7 +439,7 @@ export default function AdminPage() {
                           size="sm"
                           onClick={() => router.push(`/admin/raffles/${raffle.id}/winner`)}
                         >
-                          Definir Vencedor
+                          {raffle.winnerNumber ? "Ver Vencedor" : "Definir Vencedor"}
                         </Button>
                         <Button 
                           variant="outline" 
@@ -397,12 +457,30 @@ export default function AdminPage() {
                         </Button>
                       </>
                     )}
+                    {raffle.status === "FINISHED" && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => router.push(`/admin/raffles/${raffle.id}/winner`)}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        {raffle.winnerNumber ? "Ver Vencedor" : "Verificar Vencedor"}
+                      </Button>
+                    )}
                     <Button 
                       variant="outline" 
                       size="sm"
                       onClick={() => router.push(`/admin/raffles/${raffle.id}/payments`)}
                     >
                       Pagamentos
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={() => handleDeleteRaffle(raffle.id, raffle.title)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      Apagar
                     </Button>
                   </div>
                 </CardContent>

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Trophy, Star, ShoppingCart, Gift, LogOut } from "lucide-react"
+import { Trophy, Star, ShoppingCart, Gift, LogOut, CheckCircle } from "lucide-react"
 import { signOut } from "next-auth/react"
 
 interface Raffle {
@@ -18,12 +18,14 @@ interface Raffle {
   soldNumbers: number
   endDate: string
   image?: string
+  winnerNumber?: number
 }
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const [raffles, setRaffles] = useState<Raffle[]>([])
+  const [activeTab, setActiveTab] = useState<"active" | "finished">("active")
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -60,6 +62,14 @@ export default function DashboardPage() {
     signOut({ callbackUrl: "/" })
   }
 
+  const getActiveRaffles = () => {
+    return raffles.filter(raffle => raffle.status === "ACTIVE")
+  }
+
+  const getFinishedRaffles = () => {
+    return raffles.filter(raffle => raffle.status === "FINISHED")
+  }
+
   if (status === "loading" || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -93,28 +103,57 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            Rifas Disponíveis
+            Rifas
           </h2>
           <p className="text-gray-600">
             Escolha uma rifa e participe da sorte!
           </p>
         </div>
 
-        {raffles.length === 0 ? (
+        {/* Tabs */}
+        <div className="flex space-x-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+          <button
+            onClick={() => setActiveTab("active")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "active"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <Trophy className="h-4 w-4 inline mr-2" />
+            Rifas Ativas ({getActiveRaffles().length})
+          </button>
+          <button
+            onClick={() => setActiveTab("finished")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === "finished"
+                ? "bg-white text-gray-900 shadow-sm"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            <CheckCircle className="h-4 w-4 inline mr-2" />
+            Rifas Finalizadas ({getFinishedRaffles().length})
+          </button>
+        </div>
+
+        {(activeTab === "active" ? getActiveRaffles() : getFinishedRaffles()).length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <Trophy className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Nenhuma rifa disponível
+                {activeTab === "active" ? "Nenhuma rifa ativa" : "Nenhuma rifa finalizada"}
               </h3>
               <p className="text-gray-600">
-                Não há rifas ativas no momento. Volte em breve!
+                {activeTab === "active" 
+                  ? "Não há rifas ativas no momento. Volte em breve!"
+                  : "Nenhuma rifa foi finalizada ainda."
+                }
               </p>
             </CardContent>
           </Card>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {raffles.map((raffle) => (
+            {(activeTab === "active" ? getActiveRaffles() : getFinishedRaffles()).map((raffle) => (
               <Card key={raffle.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -152,21 +191,31 @@ export default function DashboardPage() {
                       ></div>
                     </div>
                     <div className="flex space-x-2">
-                      <Button 
-                        className="flex-1" 
-                        onClick={() => router.push(`/raffle/${raffle.id}`)}
-                        disabled={raffle.status !== 'ACTIVE'}
-                      >
-                        <ShoppingCart className="h-4 w-4 mr-2" />
-                        Participar
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => router.push(`/raffle/${raffle.id}/packages`)}
-                        disabled={raffle.status !== 'ACTIVE'}
-                      >
-                        <Gift className="h-4 w-4" />
-                      </Button>
+                      {raffle.status === 'ACTIVE' ? (
+                        <>
+                          <Button 
+                            className="flex-1" 
+                            onClick={() => router.push(`/raffle/${raffle.id}`)}
+                          >
+                            <ShoppingCart className="h-4 w-4 mr-2" />
+                            Participar
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            onClick={() => router.push(`/raffle/${raffle.id}/packages`)}
+                          >
+                            <Gift className="h-4 w-4" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button 
+                          className="flex-1" 
+                          onClick={() => router.push(`/raffle/${raffle.id}`)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Verificar Vencedor
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardContent>
