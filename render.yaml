@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: rifas-da-sorte
+    runtime: node
+    plan: starter
+    region: oregon
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXTAUTH_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: rifas-da-sorte-db
+          property: connectionString
+    healthCheckPath: /api/health
+    
+  - type: pserv
+    name: rifas-da-sorte-db
+    runtime: postgresql
+    plan: starter
+    region: oregon
+    databaseName: rifas_da_sorte
+    user: rifas_user
+
+databases:
+  - name: rifas-da-sorte-db
+    plan: starter
+    region: oregon
